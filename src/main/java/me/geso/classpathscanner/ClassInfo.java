@@ -1,5 +1,11 @@
 package me.geso.classpathscanner;
 
+/**
+ * This class represents the class information without loading.
+ * 
+ * @author tokuhirom
+ *
+ */
 public class ClassInfo {
 	@Override
 	public String toString() {
@@ -8,10 +14,20 @@ public class ClassInfo {
 
 	private final String name;
 
+	/**
+	 * Internal use only.
+	 *
+	 * @param name
+	 */
 	public ClassInfo(String name) {
 		this.name = name;
 	}
 
+	/**
+	 * Get a full name.
+	 * 
+	 * @return
+	 */
 	public String getName() {
 		return this.name;
 	}
@@ -27,6 +43,12 @@ public class ClassInfo {
 		return (lastDot < 0) ? "" : this.name.substring(0, lastDot);
 	}
 
+	/**
+	 * Load a class.
+	 * 
+	 * @return
+	 * @throws ClassNotFoundException
+	 */
 	public Class<?> load() throws ClassNotFoundException {
 		return Class.forName(this.name);
 	}

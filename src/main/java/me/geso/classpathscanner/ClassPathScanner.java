@@ -1,9 +1,9 @@
 package me.geso.classpathscanner;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Objects;
@@ -12,6 +12,12 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
+/**
+ * Scanner for the class path.
+ * 
+ * @author tokuhirom
+ *
+ */
 public class ClassPathScanner {
 	private final ClassLoader classLoader;
 
@@ -25,13 +31,35 @@ public class ClassPathScanner {
 	}
 
 	/**
+	 * Scan top level classes.
+	 * 
+	 * @param pkg
+	 * @return
+	 * @throws IOException
+	 */
+	public Collection<ClassInfo> scanTopLevelClasses() throws IOException {
+		return new ResourceScanner()
+				.scanResources(this.classLoader)
+				.stream()
+				.filter(file -> file.endsWith(".class"))
+				.map(file -> file.substring(0,
+						file.length() - ".class".length()))
+				.map(file -> file.replaceAll("\\\\", "/"))
+				.map(file -> file.replaceAll("/", "."))
+				.map(file -> new ClassInfo(file))
+				.filter(klass -> klass.getName().indexOf('$') == -1)
+				.collect(Collectors.toSet());
+	}
+
+	/**
 	 * Scan top level classes from package.
 	 * 
 	 * @param pkg
 	 * @return
 	 * @throws IOException
 	 */
-	public Set<ClassInfo> scanTopLevelClasses(Package pkg) throws IOException {
+	public Collection<ClassInfo> scanTopLevelClasses(Package pkg)
+			throws IOException {
 		Objects.requireNonNull(pkg);
 		return ClassPathScanner.getClassesForPackage(this.classLoader, pkg)
 				.stream()
@@ -47,7 +75,7 @@ public class ClassPathScanner {
 	 * @return
 	 * @throws IOException
 	 */
-	public Set<ClassInfo> scanTopLevelClassesRecursive(Package pkg)
+	public Collection<ClassInfo> scanTopLevelClassesRecursive(Package pkg)
 			throws IOException {
 		Objects.requireNonNull(pkg);
 		return ClassPathScanner.getClassesForPackage(this.classLoader, pkg)
@@ -62,14 +90,11 @@ public class ClassPathScanner {
 		final String[] files = directory.list();
 		for (int i = 0; i < files.length; i++) {
 			final String fileName = files[i];
-			String className = null;
 			// we are only interested in .class files
 			if (fileName.endsWith(".class")) {
 				// removes the .class extension
-				className = pkgname + '.'
+				String className = pkgname + '.'
 						+ fileName.substring(0, fileName.length() - 6);
-			}
-			if (className != null) {
 				classes.add(new ClassInfo(className));
 			}
 			final File subdir = new File(directory, fileName);
@@ -109,6 +134,8 @@ public class ClassPathScanner {
 		}
 	}
 
+	// This pattern was optimized for scanning classes under the package.
+	// 10x faster than ResourceScanner.
 	private static Set<ClassInfo> getClassesForPackage(
 			ClassLoader classLoader, Package pkg) throws IOException {
 		final HashSet<ClassInfo> classes = new HashSet<>();
@@ -135,4 +162,6 @@ public class ClassPathScanner {
 
 		return classes;
 	}
+
+
 }

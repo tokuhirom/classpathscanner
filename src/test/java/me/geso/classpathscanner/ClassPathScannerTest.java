@@ -1,9 +1,12 @@
 package me.geso.classpathscanner;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.util.Set;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
@@ -11,16 +14,57 @@ import org.junit.Test;
 public class ClassPathScannerTest {
 
 	@Test
-	public void test() throws IOException {
+	public void testScanTopLevelClasses() throws IOException {
 		ClassPathScanner packageScanner = new ClassPathScanner(this.getClass()
 				.getClassLoader());
-		Set<ClassInfo> classes = packageScanner
+		long t1 = System.currentTimeMillis();
+		Collection<ClassInfo> classes = packageScanner
+				.scanTopLevelClasses();
+		long t2 = System.currentTimeMillis();
+		System.out.println(t2 - t1);
+		// classes.stream().map(k -> k.getName()).sorted()
+		// .filter(k -> k.startsWith("org"))
+		// .forEach(k -> System.out.println(k));
+		assertTrue(classes.stream()
+				.map(klass -> {
+					return klass;
+				})
+				.filter(klass -> "org.junit".equals(klass.getPackageName()))
+				.count() > 0);
+		assertTrue(classes
+				.stream()
+				.filter(klass -> "me.geso.classpathscanner".equals(klass
+						.getPackageName()))
+				.count() > 0);
+		{
+			List<ClassInfo> gangs = classes.stream()
+					.filter(it -> it.getName().endsWith("TopLevelGang"))
+					.collect(Collectors.toList());
+			assertEquals(1, gangs.size());
+			assertEquals("TopLevelGang", gangs.get(0).getName());
+		}
+	}
+
+	@Test
+	public void testScanTopLevelClassesForPackage() throws IOException {
+		long t1 = System.currentTimeMillis();
+		ClassPathScanner packageScanner = new ClassPathScanner(this.getClass()
+				.getClassLoader());
+		Collection<ClassInfo> classes = packageScanner
 				.scanTopLevelClasses(Package
 						.getPackage("me.geso.classpathscanner"));
-		String got = classes.stream().map(it -> it.getName()).sorted()
-				.collect(Collectors.joining(","));
+		long t2 = System.currentTimeMillis();
+		System.out.println(t2 - t1);
+		List<String> got = classes.stream().map(it -> it.getName()).sorted()
+				.collect(Collectors.toList());
 		assertEquals(
-				"me.geso.classpathscanner.ClassInfo,me.geso.classpathscanner.ClassPathScanner,me.geso.classpathscanner.ClassPathScannerTest",
+				Arrays.asList(
+						"me.geso.classpathscanner.ClassInfo",
+						"me.geso.classpathscanner.ClassPathScanner",
+						"me.geso.classpathscanner.ClassPathScannerTest",
+						"me.geso.classpathscanner.ResourceScanner",
+						"me.geso.classpathscanner.ResourceScannerTest"
+						).stream().sorted().collect(Collectors.toList()),
 				got);
 	}
 
@@ -28,13 +72,20 @@ public class ClassPathScannerTest {
 	public void testRecursive() throws IOException {
 		ClassPathScanner packageScanner = new ClassPathScanner(this.getClass()
 				.getClassLoader());
-		Set<ClassInfo> classes = packageScanner
+		Collection<ClassInfo> classes = packageScanner
 				.scanTopLevelClassesRecursive(Package
 						.getPackage("me.geso.classpathscanner"));
-		String got = classes.stream().map(it -> it.getName()).sorted()
-				.collect(Collectors.joining(","));
+		List<String> got = classes.stream().map(it -> it.getName()).sorted()
+				.collect(Collectors.toList());
 		assertEquals(
-				"me.geso.classpathscanner.ClassInfo,me.geso.classpathscanner.ClassPathScanner,me.geso.classpathscanner.ClassPathScannerTest,me.geso.classpathscanner.child.IamAchild",
+				Arrays.asList(
+						"me.geso.classpathscanner.ClassInfo",
+						"me.geso.classpathscanner.ClassPathScanner",
+						"me.geso.classpathscanner.ClassPathScannerTest",
+						"me.geso.classpathscanner.child.IamAchild",
+						"me.geso.classpathscanner.ResourceScanner",
+						"me.geso.classpathscanner.ResourceScannerTest"
+						).stream().sorted().collect(Collectors.toList()),
 				got);
 		classes.forEach(it -> {
 			try {
@@ -50,7 +101,7 @@ public class ClassPathScannerTest {
 		// junit comes from jar!
 		ClassPathScanner packageScanner = new ClassPathScanner(this.getClass()
 				.getClassLoader());
-		Set<ClassInfo> classes = packageScanner
+		Collection<ClassInfo> classes = packageScanner
 				.scanTopLevelClasses(Package
 						.getPackage("org.junit"));
 		String got = classes.stream().map(it -> it.getName()).sorted()
