@@ -47,8 +47,10 @@ public class ResourceScanner {
 						final Enumeration<JarEntry> entries = jarFile.entries();
 						while (entries.hasMoreElements()) {
 							final JarEntry entry = entries.nextElement();
-							final String entryName = entry.getName();
-							classes.add(entryName);
+							if (!entry.isDirectory()) {
+								final String entryName = entry.getName();
+								classes.add(entryName);
+							}
 						}
 					} catch (final IOException e) {
 						throw new RuntimeException(
@@ -64,6 +66,9 @@ public class ResourceScanner {
 			}
 		}
 
+		// This is not a resource file!
+		classes.remove("META-INF/MANIFEST.MF");
+
 		return classes;
 	}
 
@@ -75,12 +80,13 @@ public class ResourceScanner {
 		if (files != null) {
 			for (int i = 0; i < files.length; i++) {
 				final String fileName = files[i];
-				classes.add((path.isEmpty() ? "" : path + "/") + fileName);
 				final File subdir = new File(directory, fileName);
 				if (subdir.isDirectory()) {
 					scanDirectory(subdir,
 							(path.isEmpty() ? "" : path + "/") + fileName,
 							classes);
+				} else {
+					classes.add((path.isEmpty() ? "" : path + "/") + fileName);
 				}
 			}
 		}

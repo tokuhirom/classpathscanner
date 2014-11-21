@@ -7,9 +7,12 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
+
+import com.google.common.reflect.ClassPath;
 
 public class ClassPathScannerTest {
 
@@ -119,6 +122,80 @@ public class ClassPathScannerTest {
 	}
 
 	public static class InnerClass {
+	}
+
+	@Test
+	public void testCompareGuava() throws IOException {
+		{
+			List<String> guava = ClassPath
+					.from(this.getClass().getClassLoader())
+					.getTopLevelClasses()
+					.stream().map(it -> it.getName())
+					.sorted()
+					.collect(Collectors.toList());
+			List<String> ours = new ClassPathScanner(this.getClass()
+					.getClassLoader())
+					.scanTopLevelClasses()
+					.stream()
+					.map(it -> it.getName())
+					.sorted()
+					.collect(Collectors.toList());
+
+			assertEquals(
+					ours,
+					guava);
+		}
+		{
+			String pkg = this.getClass().getPackage().getName();
+			List<String> guava = ClassPath
+					.from(this.getClass().getClassLoader())
+					.getTopLevelClasses(pkg)
+					.stream().map(it -> it.getName())
+					.sorted()
+					.collect(Collectors.toList());
+			List<String> ours = new ClassPathScanner(this.getClass()
+					.getClassLoader())
+					.scanTopLevelClasses(this.getClass().getPackage())
+					.stream()
+					.map(it -> it.getName())
+					.sorted()
+					.collect(Collectors.toList());
+
+			assertEquals(guava, ours);
+		}
+		{
+			List<String> guava = ClassPath
+					.from(this.getClass().getClassLoader())
+					.getTopLevelClassesRecursive(
+							this.getClass().getPackage().getName())
+					.stream().map(it -> it.getName())
+					.sorted()
+					.collect(Collectors.toList());
+			List<String> ours = new ClassPathScanner(this.getClass()
+					.getClassLoader())
+					.scanTopLevelClassesRecursive(this.getClass().getPackage())
+					.stream()
+					.map(it -> it.getName())
+					.sorted()
+					.collect(Collectors.toList());
+
+			assertEquals(guava, ours);
+		}
+		{
+			Set<String> guava = ClassPath
+					.from(this.getClass().getClassLoader())
+					.getResources()
+					.stream().map(it -> it.getResourceName())
+					.sorted()
+					.collect(Collectors.toSet());
+			Set<String> ours = new ResourceScanner()
+					.scanResources(this.getClass()
+					.getClassLoader())
+					.stream()
+					.sorted()
+					.collect(Collectors.toSet());
+			assertEquals(guava, ours);
+		}
 	}
 
 }

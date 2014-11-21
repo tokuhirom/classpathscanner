@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>me.geso</groupId>
@@ -56,6 +57,13 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- I want to compare the result with guava's -->
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>18.0</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -76,11 +84,11 @@
 				<artifactId>maven-source-plugin</artifactId>
 				<version>2.3</version>
 				<executions>
-				<execution>
-					<id>attach-sources</id>
-					<goals>
-						<goal>jar</goal>
-					</goals>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>
@@ -89,12 +97,12 @@
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>2.9.1</version>
 				<executions>
-				<execution>
-				<id>attach-javadocs</id>
-				<goals>
-				<goal>jar</goal>
-				</goals>
-				</execution>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
 				</executions>
 			</plugin>
 			<plugin>
@@ -114,9 +122,9 @@
 				<version>1.6.3</version>
 				<extensions>true</extensions>
 				<configuration>
-						<serverId>ossrh</serverId>
-						<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-						<autoReleaseAfterClose>true</autoReleaseAfterClose>
+					<serverId>ossrh</serverId>
+					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+					<autoReleaseAfterClose>true</autoReleaseAfterClose>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -129,16 +137,16 @@
 				<artifactId>maven-gpg-plugin</artifactId>
 				<version>1.5</version>
 				<executions>
-						<execution>
-								<id>sign-artifacts</id>
-								<phase>verify</phase>
-								<goals>
-										<goal>sign</goal>
-								</goals>
-						</execution>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
 				</executions>
 			</plugin>
-        </plugins>
+		</plugins>
 	</build>
 
 	<reporting>
