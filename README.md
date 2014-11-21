@@ -1,6 +1,8 @@
 classpathscanner
 ================
 
+[![Build Status](https://travis-ci.org/tokuhirom/classpathscanner.svg?branch=master)](https://travis-ci.org/tokuhirom/classpathscanner)
+
 You can list the classes from package name.
 
 ## INSTALLATION
