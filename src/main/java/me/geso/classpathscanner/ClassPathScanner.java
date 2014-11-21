@@ -46,7 +46,7 @@ public class ClassPathScanner {
 						file.length() - ".class".length()))
 				.map(file -> file.replaceAll("\\\\", "/"))
 				.map(file -> file.replaceAll("/", "."))
-				.map(file -> new ClassInfo(file))
+				.map(file -> new ClassInfo(file, classLoader))
 				.filter(klass -> klass.getName().indexOf('$') == -1)
 				.collect(Collectors.toSet());
 	}
@@ -61,10 +61,23 @@ public class ClassPathScanner {
 	public Collection<ClassInfo> scanTopLevelClasses(Package pkg)
 			throws IOException {
 		Objects.requireNonNull(pkg);
-		return ClassPathScanner.getClassesForPackage(this.classLoader, pkg)
+		return this.scanTopLevelClasses(pkg.getName());
+	}
+
+	/**
+	 * Scan top level classes from package.
+	 * 
+	 * @param pkg
+	 * @return
+	 * @throws IOException
+	 */
+	public Collection<ClassInfo> scanTopLevelClasses(String pkg)
+			throws IOException {
+		Objects.requireNonNull(pkg);
+		return this.getClassesForPackage(this.classLoader, pkg)
 				.stream()
 				.filter(klass -> klass.getName().indexOf('$') == -1)
-				.filter(klass -> klass.getPackageName().equals(pkg.getName()))
+				.filter(klass -> klass.getPackageName().equals(pkg))
 				.collect(Collectors.toSet());
 	}
 
@@ -78,13 +91,13 @@ public class ClassPathScanner {
 	public Collection<ClassInfo> scanTopLevelClassesRecursive(Package pkg)
 			throws IOException {
 		Objects.requireNonNull(pkg);
-		return ClassPathScanner.getClassesForPackage(this.classLoader, pkg)
+		return this.getClassesForPackage(this.classLoader, pkg.getName())
 				.stream()
 				.filter(klass -> klass.getName().indexOf('$') == -1)
 				.collect(Collectors.toSet());
 	}
 
-	private static void processDirectory(File directory, String pkgname,
+	private void processDirectory(File directory, String pkgname,
 			HashSet<ClassInfo> classes) {
 		// Get the list of the files contained in the package
 		final String[] files = directory.list();
@@ -95,7 +108,7 @@ public class ClassPathScanner {
 				// removes the .class extension
 				String className = pkgname + '.'
 						+ fileName.substring(0, fileName.length() - 6);
-				classes.add(new ClassInfo(className));
+				classes.add(new ClassInfo(className, classLoader));
 			}
 			final File subdir = new File(directory, fileName);
 			if (subdir.isDirectory()) {
@@ -104,7 +117,7 @@ public class ClassPathScanner {
 		}
 	}
 
-	private static void processJarfile(URL resource, String pkgname,
+	private void processJarfile(URL resource, String pkgname,
 			HashSet<ClassInfo> classes) {
 		final String relPath = pkgname.replace('.', '/');
 		final String resPath = resource.getPath();
@@ -124,7 +137,7 @@ public class ClassPathScanner {
 							.replace(".class", "");
 				}
 				if (className != null) {
-					classes.add(new ClassInfo(className));
+					classes.add(new ClassInfo(className, classLoader));
 				}
 			}
 		} catch (final IOException e) {
@@ -136,11 +149,10 @@ public class ClassPathScanner {
 
 	// This pattern was optimized for scanning classes under the package.
 	// 10x faster than ResourceScanner.
-	private static Set<ClassInfo> getClassesForPackage(
-			ClassLoader classLoader, Package pkg) throws IOException {
+	private Set<ClassInfo> getClassesForPackage(
+			ClassLoader classLoader, String pkgname) throws IOException {
 		final HashSet<ClassInfo> classes = new HashSet<>();
 
-		final String pkgname = pkg.getName();
 		final String relPath = pkgname.replace('.', '/');
 
 		// Get a File object for the package
@@ -154,9 +166,10 @@ public class ClassPathScanner {
 			final URL resource = resources.nextElement();
 			resource.getPath();
 			if (resource.toString().startsWith("jar:")) {
-				processJarfile(resource, pkgname, classes);
+				this.processJarfile(resource, pkgname, classes);
 			} else {
-				processDirectory(new File(resource.getPath()), pkgname, classes);
+				this.processDirectory(new File(resource.getPath()), pkgname,
+						classes);
 			}
 		}
 

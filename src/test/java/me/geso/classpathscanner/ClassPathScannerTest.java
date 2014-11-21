@@ -3,7 +3,10 @@ package me.geso.classpathscanner;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -28,12 +31,6 @@ public class ClassPathScannerTest {
 		// classes.stream().map(k -> k.getName()).sorted()
 		// .filter(k -> k.startsWith("org"))
 		// .forEach(k -> System.out.println(k));
-		assertTrue(classes.stream()
-				.map(klass -> {
-					return klass;
-				})
-				.filter(klass -> "org.junit".equals(klass.getPackageName()))
-				.count() > 0);
 		assertTrue(classes
 				.stream()
 				.filter(klass -> "me.geso.classpathscanner".equals(klass
@@ -100,17 +97,20 @@ public class ClassPathScannerTest {
 	}
 
 	@Test
-	public void testJar() throws IOException {
-		// junit comes from jar!
-		ClassPathScanner packageScanner = new ClassPathScanner(this.getClass()
-				.getClassLoader());
+	public void testJar() throws IOException, ClassNotFoundException {
+		URLClassLoader urlClassLoader = new URLClassLoader(
+				new URL[] {
+						new File("src/test/resources/hello-0.0.1-SNAPSHOT.jar")
+								.toURI().toURL()
+				},
+				this.getClass().getClassLoader());
+		ClassPathScanner packageScanner = new ClassPathScanner(urlClassLoader);
 		Collection<ClassInfo> classes = packageScanner
-				.scanTopLevelClasses(Package
-						.getPackage("org.junit"));
+				.scanTopLevelClasses("hello");
 		String got = classes.stream().map(it -> it.getName()).sorted()
 				.collect(Collectors.joining(","));
 		assertEquals(
-				"org.junit.After,org.junit.AfterClass,org.junit.Assert,org.junit.Assume,org.junit.Before,org.junit.BeforeClass,org.junit.ClassRule,org.junit.ComparisonFailure,org.junit.FixMethodOrder,org.junit.Ignore,org.junit.Rule,org.junit.Test,org.junit.package-info",
+				"hello.Hello",
 				got);
 		classes.forEach(it -> {
 			try {

@@ -13,14 +13,11 @@ public class ClassInfo {
 	}
 
 	private final String name;
+	private final ClassLoader classLoader;
 
-	/**
-	 * Internal use only.
-	 *
-	 * @param name
-	 */
-	public ClassInfo(String name) {
+	ClassInfo(String name, ClassLoader classLoader) {
 		this.name = name;
+		this.classLoader = classLoader;
 	}
 
 	/**
@@ -50,6 +47,6 @@ public class ClassInfo {
 	 * @throws ClassNotFoundException
 	 */
 	public Class<?> load() throws ClassNotFoundException {
-		return Class.forName(this.name);
+		return this.classLoader.loadClass(this.name);
 	}
 }
