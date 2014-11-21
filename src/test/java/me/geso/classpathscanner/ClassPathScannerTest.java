@@ -21,6 +21,7 @@ public class ClassPathScannerTest {
 
 	@Test
 	public void testScanTopLevelClasses() throws IOException {
+		System.out.println(System.getProperty("java.class.path"));
 		ClassPathScanner packageScanner = new ClassPathScanner(this.getClass()
 				.getClassLoader());
 		long t1 = System.currentTimeMillis();
@@ -28,9 +29,9 @@ public class ClassPathScannerTest {
 				.scanTopLevelClasses();
 		long t2 = System.currentTimeMillis();
 		System.out.println(t2 - t1);
-		// classes.stream().map(k -> k.getName()).sorted()
-		// .filter(k -> k.startsWith("org"))
-		// .forEach(k -> System.out.println(k));
+		classes.stream().map(k -> k.getName()).sorted()
+				.filter(k -> k.startsWith("me."))
+				.forEach(k -> System.out.println(k));
 		assertTrue(classes
 				.stream()
 				.filter(klass -> "me.geso.classpathscanner".equals(klass
@@ -190,7 +191,7 @@ public class ClassPathScannerTest {
 					.collect(Collectors.toSet());
 			Set<String> ours = new ResourceScanner()
 					.scanResources(this.getClass()
-					.getClassLoader())
+							.getClassLoader())
 					.stream()
 					.sorted()
 					.collect(Collectors.toSet());

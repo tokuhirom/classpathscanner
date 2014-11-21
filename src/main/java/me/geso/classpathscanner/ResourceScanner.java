@@ -21,14 +21,12 @@ public class ResourceScanner {
 	public ResourceScanner() {
 	}
 
-	public Collection<String> scanResources(
-			ClassLoader classLoader) throws IOException {
-		final HashSet<String> classes = new HashSet<>();
-
+	Collection<URI> getURIs(ClassLoader classLoader) {
+		System.getProperty("java.class.path");
+		final HashSet<URI> uris = new HashSet<>();
 		if (classLoader.getParent() != null) {
-			classes.addAll(scanResources(classLoader.getParent()));
+			uris.addAll(getURIs(classLoader.getParent()));
 		}
-
 		if (classLoader instanceof URLClassLoader) {
 			URLClassLoader urlClassLoader = (URLClassLoader) classLoader;
 			for (URL url : urlClassLoader.getURLs()) {
@@ -38,31 +36,41 @@ public class ResourceScanner {
 				} catch (URISyntaxException e) {
 					throw new IllegalArgumentException(e);
 				}
-				if (uri.toString().endsWith(".jar")) {
-					final String resPath = uri.getPath();
-					final String jarPath = resPath.replaceFirst("[.]jar[!].*",
-							".jar")
-							.replaceFirst("file:", "");
-					try (JarFile jarFile = new JarFile(jarPath)) {
-						final Enumeration<JarEntry> entries = jarFile.entries();
-						while (entries.hasMoreElements()) {
-							final JarEntry entry = entries.nextElement();
-							if (!entry.isDirectory()) {
-								final String entryName = entry.getName();
-								classes.add(entryName);
-							}
+				uris.add(uri);
+			}
+		}
+		return uris;
+	}
+
+	public Collection<String> scanResources(
+			ClassLoader classLoader) throws IOException {
+		Set<String> classes = new HashSet<>();
+
+		for (URI uri : this.getURIs(classLoader)) {
+			if (uri.toString().endsWith(".jar")) {
+				final String resPath = uri.getPath();
+				final String jarPath = resPath.replaceFirst("[.]jar[!].*",
+						".jar")
+						.replaceFirst("file:", "");
+				try (JarFile jarFile = new JarFile(jarPath)) {
+					final Enumeration<JarEntry> entries = jarFile.entries();
+					while (entries.hasMoreElements()) {
+						final JarEntry entry = entries.nextElement();
+						if (!entry.isDirectory()) {
+							final String entryName = entry.getName();
+							classes.add(entryName);
 						}
-					} catch (final IOException e) {
-						throw new RuntimeException(
-								"Unexpected IOException reading JAR File '"
-										+ jarPath + "'",
-								e);
 					}
-				} else {
-					scanDirectory(new File(uri.getPath()),
-							"",
-							classes);
+				} catch (final IOException e) {
+					throw new RuntimeException(
+							"Unexpected IOException reading JAR File '"
+									+ jarPath + "'",
+							e);
 				}
+			} else {
+				scanDirectory(new File(uri.getPath()),
+						"",
+						classes);
 			}
 		}
 
