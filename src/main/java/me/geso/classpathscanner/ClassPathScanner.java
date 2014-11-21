@@ -33,7 +33,6 @@ public class ClassPathScanner {
 	/**
 	 * Scan top level classes.
 	 * 
-	 * @param pkg
 	 * @return
 	 * @throws IOException
 	 */
